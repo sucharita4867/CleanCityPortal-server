@@ -27,14 +27,9 @@ async function run() {
       const result = await issuesCollection.find().toArray();
       res.send(result);
     });
-    // app.get("/allIssues", async (req, res) => {
-    //   const result = await issuesCollection.find().toArray().limi
-    //   res.send(result);
-    // });
 
     app.post("/allIssues", async (req, res) => {
       const date = req.body;
-      // console.log(date);
       const result = await issuesCollection.insertOne(date);
       res.send(result);
     });
@@ -44,6 +39,15 @@ async function run() {
       // console.log(id);
       const objectId = new ObjectId(id);
       const result = await issuesCollection.findOne({ _id: objectId });
+      res.send(result);
+    });
+
+    app.get("/latest-issues", async (req, res) => {
+      const result = await issuesCollection
+        .find()
+        .sort({ date: -1 })
+        .limit(6)
+        .toArray();
       res.send(result);
     });
 

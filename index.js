@@ -22,6 +22,7 @@ async function run() {
     await client.connect();
     const db = client.db("issues-db");
     const issuesCollection = db.collection("issues");
+    const ContributionCollection = db.collection("Contribution");
 
     app.get("/allIssues", async (req, res) => {
       const result = await issuesCollection.find().toArray();

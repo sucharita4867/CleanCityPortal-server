@@ -27,10 +27,21 @@ async function run() {
       const result = await issuesCollection.find().toArray();
       res.send(result);
     });
+    // app.get("/allIssues", async (req, res) => {
+    //   const result = await issuesCollection.find().toArray().limi
+    //   res.send(result);
+    // });
+
+    app.post("/allIssues", async (req, res) => {
+      const date = req.body;
+      // console.log(date);
+      const result = await issuesCollection.insertOne(date);
+      res.send(result);
+    });
 
     app.get("/allIssues/:id", async (req, res) => {
       const { id } = req.params;
-      console.log(id);
+      // console.log(id);
       const objectId = new ObjectId(id);
       const result = await issuesCollection.findOne({ _id: objectId });
       res.send(result);

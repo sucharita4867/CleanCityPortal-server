@@ -24,6 +24,17 @@ async function run() {
     const issuesCollection = db.collection("issues");
     const ContributionCollection = db.collection("Contribution");
 
+    app.get("/allContribution", async (req, res) => {
+      const result = await ContributionCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/allContribution", async (req, res) => {
+      const contribution = req.body;
+      const result = await ContributionCollection.insertOne(contribution);
+      res.send(result);
+    });
+
     app.get("/allIssues", async (req, res) => {
       const result = await issuesCollection.find().toArray();
       res.send(result);

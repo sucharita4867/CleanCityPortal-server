@@ -2,17 +2,17 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const port = 3000;
+require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 app.use(cors());
 app.use(express.json());
 
-const uri =
-  "mongodb+srv://CleanCityPortalDB:DIKZ1iaVKnMFaK8e@cluster0.phhktud.mongodb.net/?appName=Cluster0";
+const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASS}@cluster0.phhktud.mongodb.net/appName=Cluster0`;
 
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
-    strict: true,
+    strict: false,
     deprecationErrors: true,
   },
 });
@@ -24,6 +24,35 @@ async function run() {
     const issuesCollection = db.collection("issues");
     const ContributionCollection = db.collection("Contribution");
 
+    app.get("/community-stats", async (req, res) => {
+      try {
+        const issueEmails = await issuesCollection.distinct("email");
+        const contribEmails = await ContributionCollection.distinct("email");
+
+        const allEmails = new Set([...issueEmails, ...contribEmails]);
+
+        const totalEngagedUsers = allEmails.size;
+
+        const issuesResolved = await issuesCollection.countDocuments({
+          status: "resolved",
+        });
+
+        const issuesPending = await issuesCollection.countDocuments({
+          status: "pending",
+        });
+        const stats = {
+          totalUsers: totalEngagedUsers,
+          issuesResolved: issuesResolved,
+          issuesPending: issuesPending,
+        };
+
+        res.send(stats);
+      } catch (err) {
+        console.error("Error fetching community stats:", err);
+        res.status(500).send("Server error while fetching community stats");
+      }
+    });
+
     app.get("/allContribution", async (req, res) => {
       const result = await ContributionCollection.find().toArray();
       res.send(result);
@@ -32,6 +61,21 @@ async function run() {
     app.post("/allContribution", async (req, res) => {
       const contribution = req.body;
       const result = await ContributionCollection.insertOne(contribution);
+      res.send(result);
+    });
+
+    app.get("/myContribution", async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        return res
+          .status(400)
+          .send({ error: "Email query parameter is required" });
+      }
+      const result = await ContributionCollection.find({
+        email: email,
+      })
+        .sort({ date: -1 })
+        .toArray();
       res.send(result);
     });
 

@@ -35,6 +35,12 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/myIssue", async (req, res) => {
+      const email = req.query.email;
+      const result = await issuesCollection.find({ email: email }).toArray();
+      res.send(result);
+    });
+
     app.get("/allIssues", async (req, res) => {
       const result = await issuesCollection.find().toArray();
       res.send(result);
@@ -51,6 +57,27 @@ async function run() {
       // console.log(id);
       const objectId = new ObjectId(id);
       const result = await issuesCollection.findOne({ _id: objectId });
+      res.send(result);
+    });
+
+    app.delete("/allIssues/:id", async (req, res) => {
+      const { id } = req.params;
+      console.log(id);
+      const objectId = new ObjectId(id);
+      const filter = { _id: objectId };
+      const result = await issuesCollection.deleteOne(filter);
+      res.send(result);
+    });
+
+    app.put("/allIssues/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const objectId = new ObjectId(id);
+      const filter = { _id: objectId };
+      const updateData = {
+        $set: data,
+      };
+      const result = await issuesCollection.updateOne(filter, updateData);
       res.send(result);
     });
 

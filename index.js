@@ -7,7 +7,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 app.use(cors());
 app.use(express.json());
 
-const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASS}@cluster0.phhktud.mongodb.net/appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASS}@cluster0.phhktud.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -53,6 +53,21 @@ async function run() {
       }
     });
 
+    app.get("/myContribution", async (req, res) => {
+      const email = req.query.email;
+
+      // If no email, just send empty data (NO ERROR)
+      if (!email) {
+        return res.send([]);
+      }
+
+      const result = await ContributionCollection.find({ email })
+        .sort({ date: -1 })
+        .toArray();
+
+      res.send(result);
+    });
+
     app.get("/allContribution", async (req, res) => {
       const result = await ContributionCollection.find().toArray();
       res.send(result);
@@ -64,19 +79,30 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/myContribution", async (req, res) => {
-      const email = req.query.email;
-      if (!email) {
-        return res
-          .status(400)
-          .send({ error: "Email query parameter is required" });
+    app.get("/community-stats", async (req, res) => {
+      try {
+        const issueEmails = await issuesCollection.distinct("email");
+        const contribEmails = await ContributionCollection.distinct("email");
+
+        const totalUsers = new Set([...issueEmails, ...contribEmails]).size;
+
+        const issuesResolved = await issuesCollection.countDocuments({
+          status: "Resolved",
+        });
+
+        const issuesPending = await issuesCollection.countDocuments({
+          status: "Pending",
+        });
+
+        res.send({
+          totalUsers,
+          issuesResolved,
+          issuesPending,
+        });
+      } catch (err) {
+        console.error(err);
+        res.status(500).send("Server Error");
       }
-      const result = await ContributionCollection.find({
-        email: email,
-      })
-        .sort({ date: -1 })
-        .toArray();
-      res.send(result);
     });
 
     app.get("/myIssue", async (req, res) => {

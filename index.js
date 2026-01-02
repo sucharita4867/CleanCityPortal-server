@@ -1,8 +1,10 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const port = 3000;
+
 require("dotenv").config();
+const port = 3000;
+
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 app.use(cors());
 app.use(express.json());
@@ -19,7 +21,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     const db = client.db("issues-db");
     const issuesCollection = db.collection("issues");
     const ContributionCollection = db.collection("Contribution");
@@ -56,7 +58,6 @@ async function run() {
     app.get("/myContribution", async (req, res) => {
       const email = req.query.email;
 
-      // If no email, just send empty data (NO ERROR)
       if (!email) {
         return res.send([]);
       }
@@ -116,15 +117,25 @@ async function run() {
       res.send(result);
     });
 
+    // app.post("/allIssues", async (req, res) => {
+    //   const date = req.body;
+    //   const result = await issuesCollection.insertOne(date);
+    //   res.send(result);
+    // });
+
     app.post("/allIssues", async (req, res) => {
-      const date = req.body;
-      const result = await issuesCollection.insertOne(date);
+      const issue = {
+        ...req.body,
+        date: new Date(),
+      };
+
+      const result = await issuesCollection.insertOne(issue);
       res.send(result);
     });
 
     app.get("/allIssues/:id", async (req, res) => {
       const { id } = req.params;
-      // console.log(id);
+
       const objectId = new ObjectId(id);
       const result = await issuesCollection.findOne({ _id: objectId });
       res.send(result);
@@ -154,13 +165,16 @@ async function run() {
     app.get("/latest-issues", async (req, res) => {
       const result = await issuesCollection
         .find()
-        .sort({ date: -1 })
-        .limit(6)
+        .limit(8)
+        .sort({ _id: -1 })
+
         .toArray();
+
+      console.log("Latest issues count:", result.length);
       res.send(result);
     });
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );

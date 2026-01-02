@@ -165,13 +165,16 @@ async function run() {
     app.get("/latest-issues", async (req, res) => {
       const result = await issuesCollection
         .find()
-        .limit(8)
         .sort({ _id: -1 })
-
+        .limit(8)
         .toArray();
 
-      console.log("Latest issues count:", result.length);
       res.send(result);
+    });
+
+    app.get("/debug-total", async (req, res) => {
+      const total = await issuesCollection.countDocuments();
+      res.send({ total });
     });
 
     // await client.db("admin").command({ ping: 1 });
